@@ -3,6 +3,7 @@ package com.example.demo;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,14 +41,17 @@ public class ServiceController {
 	 * @throws URISyntaxException
 	 */
 	public int findUniqueUserIds() throws IOException, URISyntaxException {
+		List<UserDetails> jsonList = new ArrayList<UserDetails>();
 		LinkedHashSet<Long> uniqueUserIds = new LinkedHashSet<Long>();
-		// Get the JSON Feed Data from URL
-		List<UserDetails> jsonList = getJsonFeedData();
-		// Iterate the jsonList and add the userIds to uniqueUserIds<LinkedHashSet>
-		// to remove duplicate userIds
-		jsonList.forEach(js -> {
-			uniqueUserIds.add(js.getUserId());
-		});
+		if (null!= jsonList) {
+			// Get the JSON Feed Data from URL
+			jsonList = getJsonFeedData();
+			// Iterate the jsonList and add the userIds to uniqueUserIds<LinkedHashSet>
+			// to remove duplicate userIds
+			jsonList.forEach(js -> {
+				uniqueUserIds.add(js.getUserId());
+			});
+		}
 		// return the uniqueUserIds size
 		return uniqueUserIds.size();
 	}
@@ -61,17 +65,20 @@ public class ServiceController {
 	 * @throws URISyntaxException
 	 */
 	public List<UserDetails> updateList() throws IOException, URISyntaxException {
+		List<UserDetails> modifiedList = new ArrayList<UserDetails>();
 		//Get the JSON Feed Data from URL
 		List<UserDetails> jsonList = getJsonFeedData();
-		//Get the 4th item in JSON list
-		UserDetails userDetails = jsonList.get(3);
-		userDetails.setBody(EIGHTEEN_HUNDERED_FLOWERS);
-		userDetails.setTitle(EIGHTEEN_HUNDERED_FLOWERS);
-		//jsonList.set(0, userDetails);
-		//Filter the fourth item using id and set the modified 
-		//userDetails data and collect it in a new list
-		List<UserDetails> modifiedList = jsonList.stream().filter(jl -> jl.getId().equals(NUMBER_FOUR))
-				.map(ud -> userDetails).collect(Collectors.toList());
+		if(!jsonList.isEmpty()) {
+			//Get the 4th item in JSON list
+			UserDetails userDetails = jsonList.get(3);
+			userDetails.setBody(EIGHTEEN_HUNDERED_FLOWERS);
+			userDetails.setTitle(EIGHTEEN_HUNDERED_FLOWERS);
+			//jsonList.set(0, userDetails);
+			//Filter the fourth item using id and set the modified 
+			//userDetails data and collect it in a new list
+			modifiedList = jsonList.stream().filter(jl -> jl.getId().equals(NUMBER_FOUR))
+					.map(ud -> userDetails).collect(Collectors.toList());
+		}
 		return modifiedList;
 		//return jsonList;
 	}
@@ -82,21 +89,22 @@ public class ServiceController {
 	 * @return the JSON Array
 	 * @throws IOException
 	 * @throws URISyntaxException
-	 * @throws JsonMappingException 
-	 * @throws JsonParseException 
 	 */
 	public List<UserDetails> getJsonFeedData() throws URISyntaxException, IOException {
+		List<UserDetails> userDetailList = null;
 		//Set the URI for fetching JSON data
 		URI uri = new URI(JSON_FEED); 
 		//Fetch the JSON response from the above uri
 		ResponseEntity<String> jsonString = restTemplate.getForEntity(uri, String.class);
-		ObjectMapper objectMapper = new ObjectMapper();
-		//UserDetails[] userDetailArray = objectMapper.readValue(jsonString.getBody(), UserDetails[].class);
-		//List<UserDetails> userDetailList = Arrays.asList(userDetailArray);
-		//Map the json data to userDetailList
-		List<UserDetails> userDetailList = objectMapper.readValue(jsonString.getBody(),
-				new TypeReference<List<UserDetails>>() {});
-		System.out.println("Size of JSON array data from URL == "+userDetailList.size());
+		if(null!= jsonString) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			//UserDetails[] userDetailArray = objectMapper.readValue(jsonString.getBody(), UserDetails[].class);
+			//List<UserDetails> userDetailList = Arrays.asList(userDetailArray);
+			//Map the json data to userDetailList
+			userDetailList = objectMapper.readValue(jsonString.getBody(),
+					new TypeReference<List<UserDetails>>() {});
+			System.out.println("Size of JSON array data from URL == "+userDetailList.size());
+		}
 		return userDetailList;
 	}
 }

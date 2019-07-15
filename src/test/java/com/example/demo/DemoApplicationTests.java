@@ -1,10 +1,10 @@
 package com.example.demo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
@@ -20,23 +20,18 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.vo.UserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DemoApplicationTests {
-
-	//@InjectMocks
-	//MainController mainController;
 	
 	private	JSONArray jsonArray = null;
 	
-	private	JSONArray jsonArrayEmpty = new JSONArray();
+	private	JSONArray jsonEmptyArray = new JSONArray();
 
 	@InjectMocks
 	private ServiceController serviceController;
@@ -44,22 +39,15 @@ public class DemoApplicationTests {
 	@Mock
 	private RestTemplate restTemplate;
 	
-	@MockBean
-	URI uri;
-	
-	//@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Before
 	public void setUp() throws Exception {
 
 		MockitoAnnotations.initMocks(this);
-		ClassLoader classLoader = getClass().getClassLoader();
-		URL resource = classLoader.getResource("jsonFeedFile.json");
-		FileReader fileReader = new FileReader(resource.getFile());
+		URL resource = getClass().getClassLoader().getResource("jsonFeedFile.json");
 
 		JSONParser parser = new JSONParser(); 
-		jsonArray = (JSONArray) parser.parse(fileReader);
-		UserDetails[] userDetailArray = new ObjectMapper().readValue(jsonArray.toString(), UserDetails[].class);
-		System.out.println("Size of JSON array data from file == "+userDetailArray.length);
+		jsonArray = (JSONArray) parser.parse(new FileReader(resource.getFile()));
+		System.out.println("Size of JSON array data from file == "+jsonArray.size());
 	}
 
 	/**
@@ -68,7 +56,9 @@ public class DemoApplicationTests {
 	 * @throws URISyntaxException
 	 */
 	@Test
-	public void testCount() throws IOException, URISyntaxException {
+	public void returnCountOfUniqueUserIds() throws IOException, URISyntaxException {
+		//jsonArray = new JSONArray();
+		//System.out.println("Size of JSON array data from file == "+jsonArray.size());
 		mockGetForEntity();
 		int count = serviceController.findUniqueUserIds();
 		assertEquals(10, count);
@@ -76,12 +66,12 @@ public class DemoApplicationTests {
 		
 	/**
 	 * Test Case to modify the 4th category
-	 * JSON and return the modified JSON
+	 * JSON and return the modified JSON 
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
 	@Test 
-	public void testUpdateList() throws IOException, URISyntaxException { 
+	public void returnTheModifiedList() throws IOException, URISyntaxException { 
 		 mockGetForEntity();
 		 List<UserDetails> modifiedList = serviceController.updateList();
 		 System.out.println("Modified body == "+modifiedList.get(0).getBody());
@@ -90,24 +80,40 @@ public class DemoApplicationTests {
 		 assertEquals(modifiedList.get(0).getTitle(), "1800Flowers"); 
 	}
 	
+	
 	/**
-	 * Test Case to test IndexOutOfBoundsException
+	 * Test Case to test empty count of unique userIds
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	@Test(expected=IndexOutOfBoundsException.class)
-	public void testUpdateListIndexOutOfBoundsException() throws  URISyntaxException, IOException {
-		 mockGetForEntityForException();
-		 serviceController.updateList();
+	@Test
+	public void returnEmptyCountOfUserIds() throws  URISyntaxException, IOException {
+		mockGetForEntityToReturningEmptyData();
+		int count = serviceController.findUniqueUserIds();
+		assertEquals(0, count);
+
+	}
+	
+	/**
+	 * Test Case to test empty modified list
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	@Test
+	public void returnEmptyModifiedList() throws  URISyntaxException, IOException {
+		mockGetForEntityToReturningEmptyData();
+		 List<UserDetails> userDetailsList = serviceController.updateList();
+		 assertSame(0,userDetailsList.size());
+		 
 	}
 	
 	/**
 	 * @throws IOException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void mockGetForEntityForException() throws IOException {
+	private void mockGetForEntityToReturningEmptyData() throws IOException {
 		Mockito.when(restTemplate.getForEntity(Mockito.any(), ArgumentMatchers.any(Class.class)))
-		.thenReturn(new ResponseEntity(jsonArrayEmpty.toString(), HttpStatus.OK));
+		.thenReturn(new ResponseEntity(jsonEmptyArray.toString(), HttpStatus.OK));
 	}
 	
 	/**
@@ -119,17 +125,4 @@ public class DemoApplicationTests {
 		.thenReturn(new ResponseEntity(jsonArray.toString(), HttpStatus.OK));
 	}
 	
-	/*
-	/**
-	 * Test Case to test IO Exception
-	 * @throws IOException
-	 * @throws URISyntaxException
-	 */
-	/*
-	@Test(expected=URISyntaxException.class)
-	public void testURISyntaxException() throws  URISyntaxException, IOException {
-        // mockGetForEntityForException();
-		 serviceController.findUniqueUserIds();
-	}*/
-
 }
