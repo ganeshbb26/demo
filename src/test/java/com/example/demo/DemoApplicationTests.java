@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.vo.UserDetails;
+import com.fasterxml.jackson.core.JsonParseException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DemoApplicationTests {
@@ -57,8 +58,6 @@ public class DemoApplicationTests {
 	 */
 	@Test
 	public void returnCountOfUniqueUserIds() throws IOException, URISyntaxException {
-		//jsonArray = new JSONArray();
-		//System.out.println("Size of JSON array data from file == "+jsonArray.size());
 		mockGetForEntity();
 		int count = serviceController.findUniqueUserIds();
 		assertEquals(10, count);
@@ -107,6 +106,7 @@ public class DemoApplicationTests {
 		 
 	}
 	
+
 	/**
 	 * @throws IOException
 	 */
@@ -124,5 +124,26 @@ public class DemoApplicationTests {
 		Mockito.when(restTemplate.getForEntity(Mockito.any(), ArgumentMatchers.any(Class.class)))
 		.thenReturn(new ResponseEntity(jsonArray.toString(), HttpStatus.OK));
 	}
+	
+	/*/**
+	 * Test Case to test empty modified list
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	/*
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test(expected=JsonParseException.class)
+	public void CheckForJsonParseException() throws  URISyntaxException, IOException {
+		jsonArray = new JSONArray();
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("userId", 1);
+		jsonObj.put("id", 1);
+		jsonArray.add(jsonObj);
+		Mockito.when(restTemplate.getForEntity(Mockito.any(), ArgumentMatchers.any(Class.class)))
+		.thenReturn(new ResponseEntity(jsonArray.toString(), HttpStatus.OK));
+		serviceController.findUniqueUserIds();
+	}*/
+	
+	
 	
 }
